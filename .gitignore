@@ -1,0 +1,25 @@
+# CMake build directories and files
+/build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Visual Studio files
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.user
+*.db
+
+# Compiled binaries and libraries
+*.exe
+*.out
+*.a
+*.lib
+*.dll
+*.so
+
+# Log files
+*.log
