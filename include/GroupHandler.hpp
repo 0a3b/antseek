@@ -18,7 +18,7 @@
 template<typename TValue>
 class GroupHandler {
     std::unordered_map<TValue, int> groups;
-	std::unordered_multimap<int, TValue> reverseGroups;
+    std::unordered_multimap<int, TValue> reverseGroups;
     std::unordered_map<TValue, std::unordered_set<int>> negativeGroups;
     std::unordered_map<int, std::vector<TValue>> grouped;
     int groupId{ 0 };
@@ -28,7 +28,7 @@ public:
         std::lock_guard lock(mtx);
         auto itA = groups.find(a);
         auto itB = groups.find(b);
-        
+
         if (itA != groups.end() && itB != groups.end()) {
             auto range = reverseGroups.equal_range(itB->second);
             for (auto itRG = range.first; itRG != range.second; ) {
@@ -46,15 +46,15 @@ public:
         }
         else if (itA != groups.end()) {
             groups[b] = itA->second;
-			reverseGroups.insert({ itA->second, b });
+            reverseGroups.insert({ itA->second, b });
         }
         else if (itB != groups.end()) {
             groups[a] = itB->second;
-			reverseGroups.insert({ itB->second, a });
+            reverseGroups.insert({ itB->second, a });
         }
         else {
-			reverseGroups.insert({ groupId, a });
-			reverseGroups.insert({ groupId, b });
+            reverseGroups.insert({ groupId, a });
+            reverseGroups.insert({ groupId, b });
             groups[a] = groups[b] = groupId++;
         }
     }
@@ -79,14 +79,14 @@ public:
         auto itA = groups.find(a);
         auto itB = groups.find(b);
         if (itA != groups.end() && itB != groups.end()) {
-			if (itA->second == itB->second) {
-				return false;
-			}
+            if (itA->second == itB->second) {
+                return false;
+            }
 
-			auto itNegA = negativeGroups.find(a);
-			if (itNegA != negativeGroups.end() && itNegA->second.find(itB->second) != itNegA->second.end()) {
-				return false;
-			}
+            auto itNegA = negativeGroups.find(a);
+            if (itNegA != negativeGroups.end() && itNegA->second.find(itB->second) != itNegA->second.end()) {
+                return false;
+            }
 
             auto itNegB = negativeGroups.find(b);
             if (itNegB != negativeGroups.end() && itNegB->second.find(itA->second) != itNegB->second.end()) {

@@ -16,7 +16,7 @@ namespace HashUtils {
     template <typename TValue>
     inline void hashCombine(std::size_t& seed, const TValue& val)
     {
-        seed ^= std::hash<TValue>{}(val) + goldenRatio + (seed << 6) + (seed >> 2);
+        seed ^= std::hash<TValue>{}(val)+goldenRatio + (seed << 6) + (seed >> 2);
     }
 
     struct pairHash {
@@ -58,8 +58,8 @@ namespace HashUtils {
             throw std::runtime_error("Failed to open file.");
 
         const std::uintmax_t file_size = entry.file_size();
-		if (file_size < byteCount)
-			byteCount = static_cast<std::int32_t>(file_size);
+        if (file_size < byteCount)
+            byteCount = static_cast<std::int32_t>(file_size);
 
         if (!fromStart) {
             file.seekg(-static_cast<std::streamoff>(byteCount), std::ios::end);

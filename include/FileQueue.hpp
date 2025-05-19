@@ -18,11 +18,6 @@ private:
     std::unordered_map<std::string, std::pair<bool, TValue>> filesByName;
     std::unordered_map<std::pair<std::uintmax_t, std::string>, std::pair<bool, TValue>, HashUtils::pairHash> filesBySizeAndName;
 
-//    std::unordered_map<uint64_t, std::pair<bool, TValue>> filesByHash;
-//    std::unordered_map<std::pair<std::uintmax_t, uint64_t>, std::pair<bool, TValue>, HashUtils::pairHash> filesBySizeAndHash;
-//    std::unordered_map<std::pair<std::string, uint64_t>, std::pair<bool, TValue>, HashUtils::pairHash> filesByNameAndHash;
-//    std::unordered_map<std::tuple<std::uintmax_t, std::string, uint64_t>, std::pair<bool, TValue>, HashUtils::tupleHash> filesBySizeAndNameAndHash;
-
     std::queue<TValue> fileQueue;
     std::mutex mtx;
     std::condition_variable_any cv;
@@ -72,13 +67,13 @@ public:
         return true;
     }
 
-	void setFinished() {
-		{
-			std::lock_guard lock(mtx);
-			finished = true;
-		}
-		cv.notify_all();
-	}
+    void setFinished() {
+        {
+            std::lock_guard lock(mtx);
+            finished = true;
+        }
+        cv.notify_all();
+    }
 
 private:
     template<typename TKey>
@@ -92,20 +87,6 @@ private:
         else if constexpr (std::is_same_v<TKey, std::pair<std::uintmax_t, std::string>>) {
             return filesBySizeAndName;
         }
-/*        
-        else if constexpr (std::is_same_v<TKey, uint64_t>) {
-            return filesByHash;
-        }
-        else if constexpr (std::is_same_v<TKey, std::pair<std::uintmax_t, uint64_t>>) {
-            return filesBySizeAndHash;
-        }
-        else if constexpr (std::is_same_v<TKey, std::pair<std::string, uint64_t>>) {
-            return filesByNameAndHash;
-        }
-        else if constexpr (std::is_same_v<TKey, std::tuple<std::uintmax_t, std::string, uint64_t>>) {
-            return filesBySizeAndNameAndHash;
-        }
-        */
         else {
             static_assert(AlwaysFalse<TKey>::value, "Unsupported key type");
         }

@@ -38,8 +38,8 @@ private:
 
     std::mutex mtx;
     std::condition_variable_any cv;
-	bool finished{ false }; // Indicates that no more elements will be added, but some elements may still be processing
-	bool busy{ false }; // Indicates that each element pair in the queue has at least one member currently under processing.
+    bool finished{ false }; // Indicates that no more elements will be added, but some elements may still be processing
+    bool busy{ false }; // Indicates that each element pair in the queue has at least one member currently under processing.
 
 public:
     template<typename TKey>
@@ -55,9 +55,9 @@ public:
                 }
             }
 
-			map.insert({ key, value });
+            map.insert({ key, value });
 
-			busy = false;
+            busy = false;
         }
         cv.notify_one();
     }
@@ -95,7 +95,7 @@ public:
                     return true;
                 }
             }
-			busy = true;
+            busy = true;
         }
     }
 
@@ -103,7 +103,7 @@ public:
         {
             std::lock_guard lock(mtx);
             busyMainElements.erase(task.first);
-			busy = false;
+            busy = false;
         }
         cv.notify_all();
     }
@@ -122,7 +122,7 @@ public:
 
         auto& map = getMap<TKey>();
         auto& groupMap = getGroupMap<TKey>();
-        
+
         groupMap.clear();
         grouped.clear();
         int groupId = 0;

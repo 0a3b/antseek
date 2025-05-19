@@ -19,8 +19,8 @@ private:
     bool allThreadsCompleted{ false };
 
 public:
-	TreeQueue() = delete;
-	TreeQueue(int numThreads) : numberOfThreads(numThreads) {} // It must be aware of the exact number of threads that will be using the queue's pop function.
+    TreeQueue() = delete;
+    TreeQueue(int numThreads) : numberOfThreads(numThreads) {} // It must be aware of the exact number of threads that will be using the queue's pop function.
 
     void push(const TValue& path) {
         {

@@ -23,3 +23,7 @@ Makefile
 
 # Log files
 *.log
+
+# Custom build/output directories
+out/
+out/*/

@@ -38,18 +38,18 @@ constexpr const char* ArgOpt_output_format_grouped = "grouped";
 
 int main(int argc, char* argv[]) {
 #ifdef _WIN32
-	SetConsoleOutputCP(CP_UTF8);
-	std::wcout.imbue(std::locale("en_US.UTF-8"));
+    SetConsoleOutputCP(CP_UTF8);
+    std::wcout.imbue(std::locale("en_US.UTF-8"));
 #endif
 
-	ArgParser args(argc, argv);
+    ArgParser args(argc, argv);
 
-	if (args.has(ArgOpt_help)) {
+    if (args.has(ArgOpt_help)) {
         std::cout <<
             "Usage: antseek --directories <dir1> <dir2> ... --filenames <pattern1> <pattern2> ...\n"
-			<< ArgOpt_help << "                                     Show this help message\n"
-			<< ArgOpt_version << "                                  Show version information\n"
-			<< ArgOpt_output_format << " <pipe|tsv|grouped>         Output format (default: pipe)\n"
+            << ArgOpt_help << "                                     Show this help message\n"
+            << ArgOpt_version << "                                  Show version information\n"
+            << ArgOpt_output_format << " <pipe|tsv|grouped>         Output format (default: pipe)\n"
             << ArgOpt_directories << " <dir1> <dir2> ...            Directories to process\n"
             << ArgOpt_filenames << " <pattern1> <pattern2> ...      Filename patterns to match (expects C++ regex syntax)\n"
             << ArgOpt_match_filenames << "                          Match files based on their filenames\n"
@@ -65,181 +65,181 @@ int main(int argc, char* argv[]) {
             << ArgOpt_set_joker << " <value>                        Hexadecimal joker value to ignore during comparison (e.g. 0x000000FF; high-order bytes first).\n"
             << ArgOpt_compare_everything << "                       Compare each file against every other file.\n"
             "\n"
-			"When '" << ArgOpt_compare_everything << "' and '" << ArgOpt_compare_content << " " << ArgVal_compare_content_full <<
-			"' is used, the program implicitly activates both '" << ArgOpt_match_size << "' and '" << ArgOpt_match_hash << " " << ArgVal_match_hash_first <<
-			"' with a default hash block size of 4 KB.\n"
-			"\n"
-			"Typical Use Cases\n"
-			"-----------------\n"
-			"\n"
-			"Scan and list all.txt files located in both c:\\temp and c:\\mystuff.\n"
+            "When '" << ArgOpt_compare_everything << "' and '" << ArgOpt_compare_content << " " << ArgVal_compare_content_full <<
+            "' is used, the program implicitly activates both '" << ArgOpt_match_size << "' and '" << ArgOpt_match_hash << " " << ArgVal_match_hash_first <<
+            "' with a default hash block size of 4 KB.\n"
+            "\n"
+            "Typical Use Cases\n"
+            "-----------------\n"
+            "\n"
+            "Scan and list all.txt files located in both c:\\temp and c:\\mystuff.\n"
 #ifdef _WIN32
-			"antseek --directories c:\\temp c:\\mystuff --filenames \".*\\.txt$\"\n"
+            "antseek --directories c:\\temp c:\\mystuff --filenames \".*\\.txt$\"\n"
 #else
-			"./antseek --directories ~/temp ~/mystuff --filenames \".*\\.txt$\"\n"
+            "./antseek --directories ~/temp ~/mystuff --filenames \".*\\.txt$\"\n"
 #endif
-			"\n"
-			"List all capture_[6-8 digits date].jpg and .jpeg files that have at least one duplicate (fast, approximate match, filesize and first 2KB hash will be checked)\n"
+            "\n"
+            "List all capture_[6-8 digits date].jpg and .jpeg files that have at least one duplicate (fast, approximate match, filesize and first 2KB hash will be checked)\n"
 #ifdef _WIN32
-			"antseek --directories c:\\temp --filenames \"^capture_\\d{6,8}\\.(jpg|jpeg)$\" --compare-everything --match-size --match-hash first 2K\n"
+            "antseek --directories c:\\temp --filenames \"^capture_\\d{6,8}\\.(jpg|jpeg)$\" --compare-everything --match-size --match-hash first 2K\n"
 #else
             "./antseek --directories ~/temp --filenames \"^capture_\\d{6,8}\\.(jpg|jpeg)$\" --compare-everything --match-size --match-hash first 2K\n"
 #endif
-			"\n"
-			"List all .exe or .src files in c:\\temp that have at least one duplicate (accurate but slower)\n"
+            "\n"
+            "List all .exe or .src files in c:\\temp that have at least one duplicate (accurate but slower)\n"
 #ifdef _WIN32
-			"antseek --directories c:\\temp --filenames \".*\\.(exe|src)$\" --compare-everything --compare-content full\n"
+            "antseek --directories c:\\temp --filenames \".*\\.(exe|src)$\" --compare-everything --compare-content full\n"
 #else
-			"./antseek --directories ~/temp --filenames \".*\\.(exe|src)$\" --compare-everything --compare-content full\n"
+            "./antseek --directories ~/temp --filenames \".*\\.(exe|src)$\" --compare-everything --compare-content full\n"
 #endif
-			;
-		return 0;
-	}
-
-	if (args.has(ArgOpt_version)) {
-		std::cout << "AntSeek version " << VERSION_STRING << "\n";
-		return 0;
-	}
-
-	if (args.getValueCount(ArgOpt_directories) == 0) {
-		std::cout << "Error: No " << ArgOpt_directories << " specified.\n";
-		return 1;
-	}
-
-	if (args.getValueCount(ArgOpt_filenames) == 0) {
-		std::cout << "Error: No " << ArgOpt_filenames << " specified.\n";
-		return 1;
-	}
-
-	if (args.has(ArgOpt_compare_everything) && args.has(ArgOpt_compare_to)) {
-		std::cout << "Error: Invalid combination of options: " << ArgOpt_compare_everything << " and " << ArgOpt_compare_to << " cannot be used together.\n";
-        return 1;
-	}
-
-    if (args.has(ArgOpt_set_joker) && !args.has(ArgOpt_compare_to)) {
-		std::cout << "Error: Invalid combination of options: " << ArgOpt_set_joker << " requires " << ArgOpt_compare_to << ".\n";
-		return 1;
+            ;
+        return 0;
     }
 
-	if (args.has(ArgOpt_match_filenames) && args.getValueCount(ArgOpt_match_filenames) > 0) {
-		std::cout << "Error: The " << ArgOpt_match_filenames << " option does not accept any parameters.\n";
-		return 1;
-	}
+    if (args.has(ArgOpt_version)) {
+        std::cout << "AntSeek version " << VERSION_STRING << "\n";
+        return 0;
+    }
+
+    if (args.getValueCount(ArgOpt_directories) == 0) {
+        std::cout << "Error: No " << ArgOpt_directories << " specified.\n";
+        return 1;
+    }
+
+    if (args.getValueCount(ArgOpt_filenames) == 0) {
+        std::cout << "Error: No " << ArgOpt_filenames << " specified.\n";
+        return 1;
+    }
+
+    if (args.has(ArgOpt_compare_everything) && args.has(ArgOpt_compare_to)) {
+        std::cout << "Error: Invalid combination of options: " << ArgOpt_compare_everything << " and " << ArgOpt_compare_to << " cannot be used together.\n";
+        return 1;
+    }
+
+    if (args.has(ArgOpt_set_joker) && !args.has(ArgOpt_compare_to)) {
+        std::cout << "Error: Invalid combination of options: " << ArgOpt_set_joker << " requires " << ArgOpt_compare_to << ".\n";
+        return 1;
+    }
+
+    if (args.has(ArgOpt_match_filenames) && args.getValueCount(ArgOpt_match_filenames) > 0) {
+        std::cout << "Error: The " << ArgOpt_match_filenames << " option does not accept any parameters.\n";
+        return 1;
+    }
 
     if (args.has(ArgOpt_match_size) && args.getValueCount(ArgOpt_match_size) > 0) {
         std::cout << "Error: The " << ArgOpt_match_size << " option does not accept any parameters.\n";
-		return 1;
+        return 1;
     }
 
-	if (args.has(ArgOpt_compare_everything)) {
-		if (!(args.has(ArgOpt_match_filenames) || args.has(ArgOpt_match_size) || args.has(ArgOpt_match_hash) || args.has(ArgOpt_compare_content))) {
-			std::cout << "Error: The " << ArgOpt_compare_everything << " option requires at least one of the following options: "
-				<< ArgOpt_match_filenames << ", " << ArgOpt_match_size << ", " << ArgOpt_match_hash << ", or " << ArgOpt_compare_content << ".\n";
-			return 1;
-		}
+    if (args.has(ArgOpt_compare_everything)) {
+        if (!(args.has(ArgOpt_match_filenames) || args.has(ArgOpt_match_size) || args.has(ArgOpt_match_hash) || args.has(ArgOpt_compare_content))) {
+            std::cout << "Error: The " << ArgOpt_compare_everything << " option requires at least one of the following options: "
+                << ArgOpt_match_filenames << ", " << ArgOpt_match_size << ", " << ArgOpt_match_hash << ", or " << ArgOpt_compare_content << ".\n";
+            return 1;
+        }
 
-		if (args.has(ArgOpt_compare_content) && args.get(ArgOpt_compare_content) != ArgVal_compare_content_full) {
-			std::cout << "Error: The " << ArgOpt_compare_everything << " option can only be used with " << ArgOpt_compare_content << " if set to " << ArgVal_compare_content_full << ".\n";
-			return 1;
-		}
-	}
+        if (args.has(ArgOpt_compare_content) && args.get(ArgOpt_compare_content) != ArgVal_compare_content_full) {
+            std::cout << "Error: The " << ArgOpt_compare_everything << " option can only be used with " << ArgOpt_compare_content << " if set to " << ArgVal_compare_content_full << ".\n";
+            return 1;
+        }
+    }
 
-	AntSeek::Config config;   
-	config.setDirectories(args.getList(ArgOpt_directories));
-	config.setFilenamePatterns(args.getList(ArgOpt_filenames));
+    AntSeek::Config config;
+    config.setDirectories(args.getList(ArgOpt_directories));
+    config.setFilenamePatterns(args.getList(ArgOpt_filenames));
     config.matchFilename = args.has(ArgOpt_match_filenames);
     config.matchSize = args.has(ArgOpt_match_size);
-    
+
     if (args.has(ArgOpt_compare_everything)) {
-		config.operationMode = AntSeek::Config::OperationMode::AllVsAll;
+        config.operationMode = AntSeek::Config::OperationMode::AllVsAll;
     }
     else if (args.has(ArgOpt_compare_to)) {
-		config.operationMode = AntSeek::Config::OperationMode::CompareToFile;
+        config.operationMode = AntSeek::Config::OperationMode::CompareToFile;
     }
     else {
-		config.operationMode = AntSeek::Config::OperationMode::ListFiles;
+        config.operationMode = AntSeek::Config::OperationMode::ListFiles;
     }
 
     if (args.has(ArgOpt_compare_to)) {
         config.compareToFile = args.get(ArgOpt_compare_to);
     }
 
-	if (args.has(ArgOpt_set_joker)) {
-		config.jokerBytes = StringUtils::hexStringToBytes(args.get(ArgOpt_set_joker));
-	}
+    if (args.has(ArgOpt_set_joker)) {
+        config.jokerBytes = StringUtils::hexStringToBytes(args.get(ArgOpt_set_joker));
+    }
 
-	if (args.has(ArgOpt_compare_content)) {
-		std::string content_mode = args.get(ArgOpt_compare_content);
-		if (content_mode == ArgVal_compare_content_full) {
-			config.matchContent = AntSeek::Config::MatchContent::Full;
-		}
-		else if (content_mode == ArgVal_compare_content_begin) {
-			config.matchContent = AntSeek::Config::MatchContent::Begin;
-		}
-		else if (content_mode == ArgVal_compare_content_end) {
-			config.matchContent = AntSeek::Config::MatchContent::End;
-		}
-		else if (content_mode == ArgVal_compare_content_find) {
-			config.matchContent = AntSeek::Config::MatchContent::Find;
-		}
-		else {
-			std::cout << "Error: Invalid value for " << ArgOpt_compare_content << ": " << content_mode << "\n";
-			return 1;
-		}
-	}
+    if (args.has(ArgOpt_compare_content)) {
+        std::string content_mode = args.get(ArgOpt_compare_content);
+        if (content_mode == ArgVal_compare_content_full) {
+            config.matchContent = AntSeek::Config::MatchContent::Full;
+        }
+        else if (content_mode == ArgVal_compare_content_begin) {
+            config.matchContent = AntSeek::Config::MatchContent::Begin;
+        }
+        else if (content_mode == ArgVal_compare_content_end) {
+            config.matchContent = AntSeek::Config::MatchContent::End;
+        }
+        else if (content_mode == ArgVal_compare_content_find) {
+            config.matchContent = AntSeek::Config::MatchContent::Find;
+        }
+        else {
+            std::cout << "Error: Invalid value for " << ArgOpt_compare_content << ": " << content_mode << "\n";
+            return 1;
+        }
+    }
 
-	if (args.has(ArgOpt_match_hash)) {
-		std::string hash_mode = args.get(ArgOpt_match_hash);
-		if (hash_mode == ArgVal_match_hash_first) {
-			config.hashMode = AntSeek::Config::HashMode::First;
-		}
-		else if (hash_mode == ArgVal_match_hash_last) {
-			config.hashMode = AntSeek::Config::HashMode::Last;
-		}
-		else {
-			std::cout << "Error: Invalid value for " << ArgOpt_match_hash << ": " << hash_mode << "\n";
-			return 1;
-		}
+    if (args.has(ArgOpt_match_hash)) {
+        std::string hash_mode = args.get(ArgOpt_match_hash);
+        if (hash_mode == ArgVal_match_hash_first) {
+            config.hashMode = AntSeek::Config::HashMode::First;
+        }
+        else if (hash_mode == ArgVal_match_hash_last) {
+            config.hashMode = AntSeek::Config::HashMode::Last;
+        }
+        else {
+            std::cout << "Error: Invalid value for " << ArgOpt_match_hash << ": " << hash_mode << "\n";
+            return 1;
+        }
 
         if (args.getValueCount(ArgOpt_match_hash) > 1) {
-			config.hashSize = StringUtils::parseSizeString(args.get(ArgOpt_match_hash, 1));
+            config.hashSize = StringUtils::parseSizeString(args.get(ArgOpt_match_hash, 1));
         }
-	}
+    }
 
-	if (args.has(ArgOpt_output_format)) {
-		throw std::logic_error("Not implemented");
-	}
+    if (args.has(ArgOpt_output_format)) {
+        throw std::logic_error("Not implemented");
+    }
 
-	// Set default values for AllVsAll with full content comparison
-	// to improve performance when the user hasn't provided custom settings.
-	if (config.operationMode == AntSeek::Config::OperationMode::AllVsAll &&
-		config.matchContent == AntSeek::Config::MatchContent::Full) {
-		if (config.hashMode == AntSeek::Config::HashMode::None) {
-			config.hashMode = AntSeek::Config::HashMode::First;
-		}
-		config.matchSize = true;
-	}
-    
+    // Set default values for AllVsAll with full content comparison
+    // to improve performance when the user hasn't provided custom settings.
+    if (config.operationMode == AntSeek::Config::OperationMode::AllVsAll &&
+        config.matchContent == AntSeek::Config::MatchContent::Full) {
+        if (config.hashMode == AntSeek::Config::HashMode::None) {
+            config.hashMode = AntSeek::Config::HashMode::First;
+        }
+        config.matchSize = true;
+    }
+
     try {
-		// TODO: Implement smarter thread allocation based on task type, with customizable thread count via command-line argument.
-		AntSeek::ThreadConfig thrCfg;
-		int availableThreads = std::thread::hardware_concurrency();
-		thrCfg.fileCollectorCount = std::max(1, availableThreads / 3);
-		thrCfg.hashCalculatorCount = std::max(1, availableThreads / 3);
-		thrCfg.comparerCount = std::max(1, availableThreads / 3);
+        // TODO: Implement smarter thread allocation based on task type, with customizable thread count via command-line argument.
+        AntSeek::ThreadConfig thrCfg;
+        int availableThreads = std::thread::hardware_concurrency();
+        thrCfg.fileCollectorCount = std::max(1, availableThreads / 3);
+        thrCfg.hashCalculatorCount = std::max(1, availableThreads / 3);
+        thrCfg.comparerCount = std::max(1, availableThreads / 3);
 
         AntSeek as(config);
         as.start(thrCfg);
 
-		// TODO: Implement a progress indicator.
+        // TODO: Implement a progress indicator.
 
-		as.waitForFinish();
-		as.printResults();
-	}
-	catch (const std::runtime_error& e) {
-		std::cout << "Error: " << e.what() << "\n";
-		return 1;
-	}
+        as.waitForFinish();
+        as.printResults();
+    }
+    catch (const std::runtime_error& e) {
+        std::cout << "Error: " << e.what() << "\n";
+        return 1;
+    }
 
     return 0;
 }

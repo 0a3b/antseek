@@ -9,10 +9,10 @@
 
 namespace StringUtils {
 
-	inline std::string pathToString(const std::filesystem::path& path) {
+    inline std::string pathToString(const std::filesystem::path& path) {
         std::u8string p = path.u8string();
         return std::string(reinterpret_cast<const char*>(p.data()), p.size());
-	}
+    }
 
     inline std::vector<uint8_t> hexStringToBytes(std::string hex) {
         if (hex.size() >= 2 && (hex[0] == '0') && (hex[1] == 'x' || hex[1] == 'X')) {
@@ -70,7 +70,7 @@ namespace StringUtils {
 
         if (numberStr.starts_with("0x") || numberStr.starts_with("0X")) {
             isHex = true;
-			numberStr.erase(0, 2);
+            numberStr.erase(0, 2);
         }
 
         try {
@@ -80,13 +80,13 @@ namespace StringUtils {
             else {
                 value = std::stoull(numberStr);
             }
-		}
-		catch (const std::out_of_range&) {
-			throw std::invalid_argument("Size value out of range: " + input);
-		}
-		catch (const std::invalid_argument&) {
-			throw std::invalid_argument("Invalid size value: " + input);
-		}
+        }
+        catch (const std::out_of_range&) {
+            throw std::invalid_argument("Size value out of range: " + input);
+        }
+        catch (const std::invalid_argument&) {
+            throw std::invalid_argument("Invalid size value: " + input);
+        }
 
         return value * multiplier;
     }

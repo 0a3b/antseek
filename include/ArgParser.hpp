@@ -7,7 +7,7 @@
 
 class ArgParser
 {
-	std::unordered_map<std::string, std::vector<std::string>> args;
+    std::unordered_map<std::string, std::vector<std::string>> args;
 
 public:
     explicit ArgParser(int argc, char* argv[]) {
@@ -20,10 +20,10 @@ public:
         return it != args.end() ? it->second : empty;
     }
 
-	size_t getValueCount(const std::string& key) const {
-		auto it = args.find(key);
-		return it != args.end() ? it->second.size() : 0;
-	}
+    size_t getValueCount(const std::string& key) const {
+        auto it = args.find(key);
+        return it != args.end() ? it->second.size() : 0;
+    }
 
     std::string get(const std::string& key, size_t index = 0) const {
         const auto& vals = getList(key);

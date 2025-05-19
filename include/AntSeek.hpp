@@ -61,15 +61,15 @@ public:
         }
     };
 
-	struct ThreadConfig {
-		int fileCollectorCount{ 4 };
-		int hashCalculatorCount{ 4 };
-		int comparerCount{ 4 };
-		size_t bufferSize{ 8192 };
-	};
+    struct ThreadConfig {
+        int fileCollectorCount{ 4 };
+        int hashCalculatorCount{ 4 };
+        int comparerCount{ 4 };
+        size_t bufferSize{ 8192 };
+    };
 
 private:
-	Config config;
+    Config config;
     std::unique_ptr <TreeQueue<fs::path>> dirQueue;
     FileQueue<fs::directory_entry> fileQueue;
     PairQueue<fs::path> hashQueue;
@@ -87,22 +87,22 @@ public:
     explicit AntSeek(const Config& cfg) : config(cfg) {}
 
     void start(const ThreadConfig& thrCfg) {
-		dirQueue = std::make_unique<TreeQueue<fs::path>>(thrCfg.fileCollectorCount);
+        dirQueue = std::make_unique<TreeQueue<fs::path>>(thrCfg.fileCollectorCount);
 
-		for (const auto& d : config.directories) {
-			if (!fs::exists(d)) {
-				std::cerr << "Directory does not exist: " << d << "\n";
-				continue;
-			}
-			else if (!fs::is_directory(d)) {
-				std::cerr << "Not a directory: " << d << "\n";
-				continue;
-			}
-			dirQueue->push(d);
-		}
+        for (const auto& d : config.directories) {
+            if (!fs::exists(d)) {
+                std::cerr << "Directory does not exist: " << d << "\n";
+                continue;
+            }
+            else if (!fs::is_directory(d)) {
+                std::cerr << "Not a directory: " << d << "\n";
+                continue;
+            }
+            dirQueue->push(d);
+        }
 
         activeFileCollectorCount.store(thrCfg.fileCollectorCount);
-        for (auto i = thrCfg.fileCollectorCount ; i ; --i) {
+        for (auto i = thrCfg.fileCollectorCount; i; --i) {
             workers.emplace_back([this](std::stop_token st) {
                 this->fileCollectorThread(st);
                 }, stopSource.get_token());
@@ -118,7 +118,7 @@ public:
                     this->hashCalculatorThread(st);
                     }, stopSource.get_token());
             }
-            
+
             if (config.matchContent != Config::MatchContent::None) {
                 activeComparerCount.store(thrCfg.comparerCount);
                 for (auto i = thrCfg.comparerCount; i; --i) {
@@ -130,10 +130,10 @@ public:
         }
         else if (config.operationMode == Config::OperationMode::CompareToFile) {
             throw std::logic_error("Not implemented");
-		}
-		else {
+        }
+        else {
             throw std::runtime_error("Unknown operation mode");
-        }     
+        }
     }
 
     void requestStop() {
@@ -142,13 +142,13 @@ public:
 
     void waitForFinish() {
         for (auto& worker : workers) {
-			if (worker.joinable()) {
+            if (worker.joinable()) {
                 worker.join();
-			}
+            }
         }
     }
 
-	void getStatus() {
+    void getStatus() {
         throw std::logic_error("Not implemented");
     }
 
@@ -160,7 +160,7 @@ public:
                 std::cout << StringUtils::pathToString(p) << "\n";
             }
         }
-        else if (config.operationMode == Config::OperationMode::AllVsAll) {               
+        else if (config.operationMode == Config::OperationMode::AllVsAll) {
             if (config.matchContent != Config::MatchContent::None) {
                 auto it = groupHandler.buildGroupedList();
                 for (const auto& [groupId, group] : it) {
@@ -179,7 +179,7 @@ public:
                     for (const auto& file : group) {
                         std::cout << "  " << StringUtils::pathToString(file) << "\n";
                     }
-                }            
+                }
             }
         }
         else if (config.operationMode == Config::OperationMode::CompareToFile) {
@@ -233,47 +233,47 @@ private:
                     if (entry.is_directory()) {
                         dirQueue->push(entry.path());
                     }
-                    else if (entry.is_regular_file()) {                
+                    else if (entry.is_regular_file()) {
                         auto fn = StringUtils::pathToString(entry.path().filename());
                         if (RegexUtils::matchesAnyPattern(fn, config.filenamePatterns)) {
-							
-							switch (config.operationMode) {
-                                case Config::OperationMode::ListFiles:
-                                    {
-                                        std::lock_guard lock(results_mtx);
-                                        results.push_back(entry.path());
+
+                            switch (config.operationMode) {
+                            case Config::OperationMode::ListFiles:
+                            {
+                                std::lock_guard lock(results_mtx);
+                                results.push_back(entry.path());
+                            }
+                            break;
+                            case Config::OperationMode::CompareToFile:
+                                throw std::logic_error("Not implemented");
+                                //	fileCompareToOneQueue.push(entry);
+                                break;
+                            case Config::OperationMode::AllVsAll:
+                                if (config.matchFilename) {
+                                    if (config.matchSize) {
+                                        fileQueue.push(std::make_pair(entry.file_size(), fn), entry);
                                     }
-								    break;
-							    case Config::OperationMode::CompareToFile:
-                                    throw std::logic_error("Not implemented");
-								//	fileCompareToOneQueue.push(entry);
-								    break;
-								case Config::OperationMode::AllVsAll:
-									if (config.matchFilename) {
-										if (config.matchSize) {
-                                            fileQueue.push(std::make_pair(entry.file_size(), fn), entry);
-										}
-                                        else {
-                                            fileQueue.push(fn, entry);
-                                        }
-									}
-                                    else if (config.matchSize) {
-										fileQueue.push(entry.file_size(), entry);
-									}
                                     else {
-										fileQueue.pushPassthrough(entry);
+                                        fileQueue.push(fn, entry);
                                     }
-								    break;
-							    default:
-                                    throw std::runtime_error("Unknown operation mode");
-							}
-						}
+                                }
+                                else if (config.matchSize) {
+                                    fileQueue.push(entry.file_size(), entry);
+                                }
+                                else {
+                                    fileQueue.pushPassthrough(entry);
+                                }
+                                break;
+                            default:
+                                throw std::runtime_error("Unknown operation mode");
+                            }
+                        }
                     }
                 }
             }
             catch (const std::exception& e) {
-				// TODO: skip?, log?
-				LoggingUtils::writeToStderr(std::string("[ERROR] fileCollectorThread exception: ") + e.what() + "\n" + 
+                // TODO: skip?, log?
+                LoggingUtils::writeToStderr(std::string("[ERROR] fileCollectorThread exception: ") + e.what() + "\n" +
                     std::string("[ERROR] fileCollectorThread path: ") + current.string());
             }
         }
@@ -285,15 +285,15 @@ private:
 
     void hashCalculatorThread(std::stop_token st) {
         fs::directory_entry current;
-		bool justCollect = (config.matchContent == Config::MatchContent::None);
+        bool justCollect = (config.matchContent == Config::MatchContent::None);
 
         while (fileQueue.pop(current, st)) {
             if (st.stop_requested()) return;
 
-			if (config.hashMode == Config::HashMode::None) {
+            if (config.hashMode == Config::HashMode::None) {
                 if (config.matchFilename) {
                     auto fn = StringUtils::pathToString(current.path().filename());
-                    if (config.matchSize) {                        
+                    if (config.matchSize) {
                         hashQueue.push(std::make_pair(current.file_size(), fn), current.path(), justCollect);
                     }
                     else {
@@ -306,7 +306,7 @@ private:
                 else {
                     hashQueue.pushPassthrough(current.path());
                 }
-			}
+            }
             else {
                 uint64_t hash = HashUtils::hashFromFileChunk(current, config.hashSize, config.hashMode == Config::HashMode::First);
                 if (config.matchFilename) {
@@ -340,22 +340,22 @@ private:
 
             if (groupHandler.shouldItProcess(current.first, current.second)) {
                 switch (CompareUtils::compareFileContents(current.first, current.second)) {
-				    case CompareUtils::FileCompareResult::Equal:
-					    groupHandler.addSame(current.first, current.second);
-					    break;
-				    case CompareUtils::FileCompareResult::NotEqual:
-                        groupHandler.addDifferent(current.first, current.second);
-                        break;
-				    case CompareUtils::FileCompareResult::Error:
-						LoggingUtils::writeToStderr("[ERROR] Error comparing files: " + current.first.string() + " and " + current.second.string());
-					    break;
+                case CompareUtils::FileCompareResult::Equal:
+                    groupHandler.addSame(current.first, current.second);
+                    break;
+                case CompareUtils::FileCompareResult::NotEqual:
+                    groupHandler.addDifferent(current.first, current.second);
+                    break;
+                case CompareUtils::FileCompareResult::Error:
+                    LoggingUtils::writeToStderr("[ERROR] Error comparing files: " + current.first.string() + " and " + current.second.string());
+                    break;
                 }
             }
             hashQueue.setProcessed(current);
         }
 
         if (activeComparerCount.fetch_sub(1) == 1) {
-			std::cout << "All threads finished processing.\n";
+            std::cout << "All threads finished processing.\n";
         }
     }
 
