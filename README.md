@@ -39,6 +39,24 @@ cd antseek
 antseek.exe --help
 ```
 
+## Tested Compilers and Environments
+
+AntSeek has been compiled and tested on several Linux distributions and Windows with the following compiler versions:
+
+### Linux
+
+| Distribution | Clang Version | GCC Version | Status                |
+|--------------|---------------|-------------|-----------------------|
+| Ubuntu       | 18.1.3        | 13.3.0      | Compiles successfully |
+| Alpine       | 20.1.5        | 14.2.0      | Compiles successfully |
+| Fedora       | 20.1.5        | 15.1.1      | Compiles successfully |
+| Arch Linux   | 19.1.7        | 15.1.1      | Compiles successfully |
+| Pop!_OS      | 14.0.0        | 11.4.0      | Fails to compile      |
+
+### Windows
+
+- MSVC (Visual Studio 2022) — Compiles successfully
+
 ## Usage
 
 ### Basic Command-Line Options
