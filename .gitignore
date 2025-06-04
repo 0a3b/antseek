@@ -13,6 +13,9 @@ Makefile
 *.user
 *.db
 
+# Visual Studio Code settings
+.vscode/
+
 # Compiled binaries and libraries
 *.exe
 *.out
