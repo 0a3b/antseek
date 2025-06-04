@@ -40,6 +40,7 @@ public:
         size_t hashSize{ 4096 };
         std::vector<uint8_t> jokerBytes;
         enum class OperationMode { ListFiles, CompareToFile, AllVsAll } operationMode{ OperationMode::ListFiles };
+        enum class OutputFormat { Grouped, TSV, Pipe } outputFormat{ OutputFormat::Pipe };
 
         void setDirectories(const std::vector<std::string>& strvecDirectories) {
             directories.clear();
@@ -164,9 +165,9 @@ public:
             if (config.matchContent != Config::MatchContent::None) {
                 auto it = groupHandler.buildGroupedList();
                 for (const auto& [groupId, group] : it) {
-                    std::cout << "Group ID: " << groupId << "\n";
+                    printGroup(groupId);
                     for (const auto& file : group) {
-                        std::cout << "  " << StringUtils::pathToString(file) << "\n";
+                        printLine(groupId, StringUtils::pathToString(file));
                     }
                 }
             }
@@ -175,9 +176,9 @@ public:
                     return pair.second.size() > 1;
                     });
                 for (const auto& [groupId, group] : it) {
-                    std::cout << "Group ID: " << groupId << "\n";
+                    printGroup(groupId);
                     for (const auto& file : group) {
-                        std::cout << "  " << StringUtils::pathToString(file) << "\n";
+                        printLine(groupId, StringUtils::pathToString(file));
                     }
                 }
             }
@@ -191,6 +192,36 @@ public:
     }
 
 private:
+    void printGroup(int groupId) {
+        switch (config.outputFormat) {
+            case Config::OutputFormat::Grouped:
+                std::cout << "Group ID: " << groupId << "\n";
+                break;
+            case Config::OutputFormat::TSV:
+            case Config::OutputFormat::Pipe:
+                // No output
+                break;
+            default:
+                throw std::runtime_error("Unknown output format");
+        }
+    }
+
+    void printLine(int groupId, const std::string& line) {
+        switch (config.outputFormat) {
+            case Config::OutputFormat::Grouped:
+                std::cout << "  " << line << "\n";
+                break;
+            case Config::OutputFormat::TSV:
+                std::cout << groupId << "\t" << line << "\n";
+                break;
+            case Config::OutputFormat::Pipe:
+                std::cout << groupId << "|" << line << "\n";
+                break;
+            default:
+                throw std::runtime_error("Unknown output format");
+        }
+    }
+
     auto getPairQueueResult() -> std::unordered_map<int, std::vector<fs::path>> {
         if (config.hashMode == Config::HashMode::None) {
             if (config.matchFilename) {

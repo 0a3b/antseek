@@ -207,7 +207,17 @@ int main(int argc, char* argv[]) {
     }
 
     if (args.has(ArgOpt_output_format)) {
-        throw std::logic_error("Not implemented");
+        std::string format = args.get(ArgOpt_output_format);
+        if (format == ArgOpt_output_format_pipe) {
+            config.outputFormat = AntSeek::Config::OutputFormat::Pipe;
+        } else if (format == ArgOpt_output_format_tsv) {
+            config.outputFormat = AntSeek::Config::OutputFormat::TSV;
+        } else if (format == ArgOpt_output_format_grouped) {
+            config.outputFormat = AntSeek::Config::OutputFormat::Grouped;
+        } else {
+            std::cout << "Error: Invalid value for " << ArgOpt_output_format << ": " << format << "\n";
+            return 1;
+        }
     }
 
     // Set default values for AllVsAll with full content comparison
