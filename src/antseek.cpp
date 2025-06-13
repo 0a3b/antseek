@@ -144,6 +144,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    if (args.has(ArgOpt_compare_to) && !args.has(ArgOpt_compare_content)) {
+        std::cout << "Error: The " << ArgOpt_compare_to << " option requires option " << ArgOpt_compare_content << ".\n";
+        return 1;
+    }
+
     AntSeek::Config config;
     config.setDirectories(args.getList(ArgOpt_directories));
     config.setFilenamePatterns(args.getList(ArgOpt_filenames));

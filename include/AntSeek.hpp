@@ -82,7 +82,13 @@ private:
     std::atomic<int> activeHashCalculatorCount{ 0 };
     std::atomic<int> activeComparerCount{ 0 };
 
-    std::vector<fs::path> results;  // vagy B
+    std::uintmax_t referenceFileSize{ 0 };
+    std::string referenceFileName;
+    uint64_t referenceFileHash{ 0 };
+    std::vector<uint8_t> referenceData;
+    std::vector<uint64_t> referenceDataMask;
+
+    std::vector<fs::path> results;
     std::mutex results_mtx;
 public:
     explicit AntSeek(const Config& cfg) : config(cfg) {}
@@ -130,7 +136,18 @@ public:
             }
         }
         else if (config.operationMode == Config::OperationMode::CompareToFile) {
-            throw std::logic_error("Not implemented");
+            loadCompareToFile();
+
+            if (config.hashMode != Config::HashMode::None) {
+                referenceFileHash = HashUtils::hashFromFileChunk(fs::directory_entry(config.compareToFile), config.hashSize, config.hashMode == Config::HashMode::First);
+            }
+
+            activeComparerCount.store(thrCfg.comparerCount);
+            for (auto i = thrCfg.comparerCount; i; --i) {
+                workers.emplace_back([this](std::stop_token st) {
+                    this->compareContentFlexibleThread(st);
+                    }, stopSource.get_token());
+            }
         }
         else {
             throw std::runtime_error("Unknown operation mode");
@@ -156,7 +173,9 @@ public:
     void printResults() {
         waitForFinish();
 
-        if (config.operationMode == Config::OperationMode::ListFiles) {
+        if (config.operationMode == Config::OperationMode::ListFiles ||
+            config.operationMode == Config::OperationMode::CompareToFile)
+        {
             for (const auto& p : results) {
                 std::cout << StringUtils::pathToString(p) << "\n";
             }
@@ -183,15 +202,29 @@ public:
                 }
             }
         }
-        else if (config.operationMode == Config::OperationMode::CompareToFile) {
-            throw std::logic_error("Not implemented");
-        }
         else {
             throw std::runtime_error("Unknown operation mode");
         }
     }
 
 private:
+    void loadCompareToFile() {
+        referenceFileName = StringUtils::pathToString(config.compareToFile.filename());
+
+        std::ifstream file(config.compareToFile, std::ios::binary | std::ios::ate);
+        if (!file)
+            throw std::runtime_error(std::string("Failed to open reference file: ") + referenceFileName);
+
+        referenceFileSize = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        referenceData.resize(referenceFileSize);
+        if (!file.read(reinterpret_cast<char*>(referenceData.data()), referenceFileSize))
+            throw std::runtime_error(std::string("Failed to read reference file: ") + referenceFileName);
+
+        referenceDataMask = CompareUtils::generatePatternMask(referenceData, config.jokerBytes);
+    }
+
     void printGroup(int groupId) {
         switch (config.outputFormat) {
             case Config::OutputFormat::Grouped:
@@ -269,15 +302,25 @@ private:
                         if (RegexUtils::matchesAnyPattern(fn, config.filenamePatterns)) {
 
                             switch (config.operationMode) {
-                            case Config::OperationMode::ListFiles:
-                            {
-                                std::lock_guard lock(results_mtx);
-                                results.push_back(entry.path());
-                            }
-                            break;
+                                case Config::OperationMode::ListFiles:
+                                {
+                                    std::lock_guard lock(results_mtx);
+                                    results.push_back(entry.path());
+                                }
+                                break;
                             case Config::OperationMode::CompareToFile:
-                                throw std::logic_error("Not implemented");
-                                //	fileCompareToOneQueue.push(entry);
+                                {
+                                    auto fileSize = entry.file_size();
+                                    if ((referenceFileSize <= fileSize) &&
+                                        (config.matchContent != Config::MatchContent::Full || fileSize == referenceFileSize) &&
+                                        (!config.matchSize || fileSize == referenceFileSize) &&
+                                        (!config.matchFilename || fn == referenceFileName) &&
+                                        (config.hashMode == Config::HashMode::None ||
+                                            referenceFileHash == HashUtils::hashFromFileChunk(entry, config.hashSize, config.hashMode == Config::HashMode::First)))
+                                    {
+                                        fileQueue.pushPassthrough(entry);
+                                    }
+                                }
                                 break;
                             case Config::OperationMode::AllVsAll:
                                 if (config.matchFilename) {
@@ -371,13 +414,13 @@ private:
 
             if (groupHandler.shouldItProcess(current.first, current.second)) {
                 switch (CompareUtils::compareFileContents(current.first, current.second)) {
-                case CompareUtils::FileCompareResult::Equal:
+                case CompareUtils::MatchResult::Match:
                     groupHandler.addSame(current.first, current.second);
                     break;
-                case CompareUtils::FileCompareResult::NotEqual:
+                case CompareUtils::MatchResult::NoMatch:
                     groupHandler.addDifferent(current.first, current.second);
                     break;
-                case CompareUtils::FileCompareResult::Error:
+                case CompareUtils::MatchResult::Error:
                     LoggingUtils::writeToStderr("[ERROR] Error comparing files: " + current.first.string() + " and " + current.second.string());
                     break;
                 }
@@ -390,4 +433,33 @@ private:
         }
     }
 
+    void compareContentFlexibleThread(std::stop_token st) {
+        fs::directory_entry current;
+
+        while (fileQueue.pop(current, st)) {
+            if (st.stop_requested()) return;
+
+            CompareUtils::MatchResult res;
+            switch (config.matchContent) {
+                case Config::MatchContent::Begin:
+                case Config::MatchContent::Full:
+                    res = CompareUtils::compareFileContentsFlexible(current, referenceData, referenceDataMask, false);
+                    break;
+                case Config::MatchContent::End:
+                    res = CompareUtils::compareFileContentsFlexible(current, referenceData, referenceDataMask, true);
+                    break;
+                case Config::MatchContent::Find:
+                    res = CompareUtils::searchInFileContentsFlexible(current, referenceData, referenceDataMask);
+                    break;
+            }
+
+            if (res == CompareUtils::MatchResult::Match) {
+                results.push_back(current);
+            }
+        }
+
+        if (activeComparerCount.fetch_sub(1) == 1) {
+            std::cout << "All threads finished processing.\n";
+        }
+    }
 };
