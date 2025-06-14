@@ -393,6 +393,7 @@ void AntSeek::compareContentFlexibleThread(std::stop_token st) {
         }
 
         if (res == CompareUtils::MatchResult::Match) {
+            std::lock_guard lock(results_mtx);
             results.push_back(current);
         }
     }
