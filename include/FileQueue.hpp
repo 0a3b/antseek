@@ -13,16 +13,6 @@
 // but can only be popped if their key has occurred multiple times.
 template<typename TValue>
 class FileQueue {
-private:
-    std::unordered_map<std::uintmax_t, std::pair<bool, TValue>> filesBySize;
-    std::unordered_map<std::string, std::pair<bool, TValue>> filesByName;
-    std::unordered_map<std::pair<std::uintmax_t, std::string>, std::pair<bool, TValue>, HashUtils::pairHash> filesBySizeAndName;
-
-    std::queue<TValue> fileQueue;
-    std::mutex mtx;
-    std::condition_variable_any cv;
-    bool finished{ false }; // Indicates that no more elements will be added, but some elements may still be processing
-
 public:
     template<typename TKey>
     void push(TKey key, const TValue& value) {
@@ -76,6 +66,15 @@ public:
     }
 
 private:
+    std::unordered_map<std::uintmax_t, std::pair<bool, TValue>> filesBySize;
+    std::unordered_map<std::string, std::pair<bool, TValue>> filesByName;
+    std::unordered_map<std::pair<std::uintmax_t, std::string>, std::pair<bool, TValue>, HashUtils::pairHash> filesBySizeAndName;
+
+    std::queue<TValue> fileQueue;
+    std::mutex mtx;
+    std::condition_variable_any cv;
+    bool finished{ false }; // Indicates that no more elements will be added, but some elements may still be processing
+
     template<typename TKey>
     auto& getMap() {
         if constexpr (std::is_same_v<TKey, std::uintmax_t>) {

@@ -13,34 +13,6 @@
 // pairwise combinations of values that share the same key.
 template<typename TValue>
 class PairQueue {
-private:
-    std::vector<TValue> files;
-    std::unordered_multimap<std::uintmax_t, TValue> filesBySize;
-    std::unordered_multimap<std::string, TValue> filesByName;
-    std::unordered_multimap<std::pair<std::uintmax_t, std::string>, TValue, HashUtils::pairHash> filesBySizeAndName;
-
-    std::unordered_multimap<uint64_t, TValue> filesByHash;
-    std::unordered_multimap<std::pair<std::uintmax_t, uint64_t>, TValue, HashUtils::pairHash> filesBySizeAndHash;
-    std::unordered_multimap<std::pair<std::string, uint64_t>, TValue, HashUtils::pairHash> filesByNameAndHash;
-    std::unordered_multimap<std::tuple<std::uintmax_t, std::string, uint64_t>, TValue, HashUtils::tupleHash> filesBySizeAndNameAndHash;
-
-    std::deque<std::pair<TValue, TValue>> pairQueue;
-    std::unordered_set<TValue> busyMainElements;
-
-    std::unordered_map<int, std::vector<TValue>> grouped;
-    std::unordered_map<std::uintmax_t, int> groupsBySize;
-    std::unordered_map<std::string, int> groupsByName;
-    std::unordered_map<std::pair<std::uintmax_t, std::string>, int, HashUtils::pairHash> groupsBySizeAndName;
-    std::unordered_map<uint64_t, int> groupsByHash;
-    std::unordered_map<std::pair<std::uintmax_t, uint64_t>, int, HashUtils::pairHash> groupsBySizeAndHash;
-    std::unordered_map<std::pair<std::string, uint64_t>, int, HashUtils::pairHash> groupsByNameAndHash;
-    std::unordered_map<std::tuple<std::uintmax_t, std::string, uint64_t>, int, HashUtils::tupleHash> groupsBySizeAndNameAndHash;
-
-    std::mutex mtx;
-    std::condition_variable_any cv;
-    bool finished{ false }; // Indicates that no more elements will be added, but some elements may still be processing
-    bool busy{ false }; // Indicates that each element pair in the queue has at least one member currently under processing.
-
 public:
     template<typename TKey>
     void push(TKey key, const TValue& value, bool justCollect = false) {
@@ -142,6 +114,33 @@ public:
     }
 
 private:
+    std::vector<TValue> files;
+    std::unordered_multimap<std::uintmax_t, TValue> filesBySize;
+    std::unordered_multimap<std::string, TValue> filesByName;
+    std::unordered_multimap<std::pair<std::uintmax_t, std::string>, TValue, HashUtils::pairHash> filesBySizeAndName;
+
+    std::unordered_multimap<uint64_t, TValue> filesByHash;
+    std::unordered_multimap<std::pair<std::uintmax_t, uint64_t>, TValue, HashUtils::pairHash> filesBySizeAndHash;
+    std::unordered_multimap<std::pair<std::string, uint64_t>, TValue, HashUtils::pairHash> filesByNameAndHash;
+    std::unordered_multimap<std::tuple<std::uintmax_t, std::string, uint64_t>, TValue, HashUtils::tupleHash> filesBySizeAndNameAndHash;
+
+    std::deque<std::pair<TValue, TValue>> pairQueue;
+    std::unordered_set<TValue> busyMainElements;
+
+    std::unordered_map<int, std::vector<TValue>> grouped;
+    std::unordered_map<std::uintmax_t, int> groupsBySize;
+    std::unordered_map<std::string, int> groupsByName;
+    std::unordered_map<std::pair<std::uintmax_t, std::string>, int, HashUtils::pairHash> groupsBySizeAndName;
+    std::unordered_map<uint64_t, int> groupsByHash;
+    std::unordered_map<std::pair<std::uintmax_t, uint64_t>, int, HashUtils::pairHash> groupsBySizeAndHash;
+    std::unordered_map<std::pair<std::string, uint64_t>, int, HashUtils::pairHash> groupsByNameAndHash;
+    std::unordered_map<std::tuple<std::uintmax_t, std::string, uint64_t>, int, HashUtils::tupleHash> groupsBySizeAndNameAndHash;
+
+    std::mutex mtx;
+    std::condition_variable_any cv;
+    bool finished{ false }; // Indicates that no more elements will be added, but some elements may still be processing
+    bool busy{ false }; // Indicates that each element pair in the queue has at least one member currently under processing.
+
     template<typename TKey>
     auto& getMap() {
         if constexpr (std::is_same_v<TKey, std::uintmax_t>) {

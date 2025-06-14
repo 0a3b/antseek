@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Source files
 add_executable(antseek
     src/main.cpp
+    src/AntSeek.cpp
     external/xxhash/xxhash.c
 )
 

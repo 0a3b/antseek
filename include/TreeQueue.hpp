@@ -10,14 +10,6 @@
 // pop() returns false if the queue is empty and all threads have finished their work, meaning the entire processing is complete
 template<typename TValue>
 class TreeQueue {
-private:
-    std::queue<TValue> taskQueue;
-    std::mutex mtx;
-    std::condition_variable_any cv;
-    std::atomic<int> threadsWaitingForTasks{ 0 };
-    int numberOfThreads;
-    bool allThreadsCompleted{ false };
-
 public:
     TreeQueue() = delete;
     TreeQueue(int numThreads) : numberOfThreads(numThreads) {} // It must be aware of the exact number of threads that will be using the queue's pop function.
@@ -48,4 +40,12 @@ public:
         taskQueue.pop();
         return true;
     }
+
+private:
+    std::queue<TValue> taskQueue;
+    std::mutex mtx;
+    std::condition_variable_any cv;
+    std::atomic<int> threadsWaitingForTasks{ 0 };
+    int numberOfThreads;
+    bool allThreadsCompleted{ false };
 };

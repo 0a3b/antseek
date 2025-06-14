@@ -17,12 +17,6 @@
 // Useful for optimization scenarios where redundant comparisons can be skipped based on known group affiliations.
 template<typename TValue>
 class GroupHandler {
-    std::unordered_map<TValue, int> groups;
-    std::unordered_multimap<int, TValue> reverseGroups;
-    std::unordered_map<TValue, std::unordered_set<int>> negativeGroups;
-    std::unordered_map<int, std::vector<TValue>> grouped;
-    int groupId{ 0 };
-    std::mutex mtx;
 public:
     void addSame(const TValue& a, const TValue& b) {
         std::lock_guard lock(mtx);
@@ -109,4 +103,12 @@ public:
             return pair.second.size() > 1;
             });
     }
+
+private:
+    std::unordered_map<TValue, int> groups;
+    std::unordered_multimap<int, TValue> reverseGroups;
+    std::unordered_map<TValue, std::unordered_set<int>> negativeGroups;
+    std::unordered_map<int, std::vector<TValue>> grouped;
+    int groupId{ 0 };
+    std::mutex mtx;
 };

@@ -5,10 +5,7 @@
 #include <unordered_map>
 
 
-class ArgParser
-{
-    std::unordered_map<std::string, std::vector<std::string>> args;
-
+class ArgParser {
 public:
     explicit ArgParser(int argc, char* argv[]) {
         parse(argc, argv);
@@ -35,6 +32,8 @@ public:
     }
 
 private:
+    std::unordered_map<std::string, std::vector<std::string>> args;
+
     void parse(int argc, char* argv[]) {
         std::string key;
         for (int i = 1; i < argc; ++i) {
