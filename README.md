@@ -132,6 +132,38 @@ antseek --directories c:\temp --filenames ".*\.(exe|src)$" --compare-everything 
 ./antseek --directories ~/temp --filenames ".*\.(exe|src)$" --compare-everything --compare-content full
 ```
 
+---
+
+### 4. Lists all files that contain the content of testA.dat, treating every occurrence of the 16-bit value 0xFFFF in testA.dat as a wildcard. These wildcard positions are not compared during the matching process, meaning they can match any two bytes in the target files.
+
+#### Windows
+
+```bash
+antseek --directories c:\temp --filenames ".*" --compare-to c:\myfiles\testA.dat --compare-content find --set-joker ffff
+```
+
+#### Linux
+
+```bash
+./antseek --directories ~/temp --filenames ".*" --compare-to ~/testA.dat --compare-content find --set-joker ffff
+```
+
+---
+
+### 5. Checks whether files start with the content of testB.dat, performing the comparison only at the beginning of each file. The 4-byte value 0xDEADBEEF is treated as a wildcard and will match any 4 consecutive bytes in the target files.
+
+#### Windows
+
+```bash
+antseek --directories c:\temp --filenames ".*" --compare-to c:\myfiles\testB.dat --compare-content begin --set-joker deadbeef
+```
+
+#### Linux
+
+```bash
+./antseek --directories ~/temp --filenames ".*" --compare-to ~/testB.dat --compare-content begin --set-joker deadbeef
+```
+
 ## Output Formats
 
 AntSeek supports the following output formats:
